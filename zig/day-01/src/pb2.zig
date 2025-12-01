@@ -12,37 +12,32 @@ const SRC = @embedFile("./src2.txt");
 //     \\L99
 //     \\R14
 //     \\L82
-//     \\L930
+//     \\L931
 //     \\
 // ;
 
 pub fn main() !void {
     var it = std.mem.splitAny(u8, SRC, "\n");
 
-    var model_dial: i32 = 50;
-    var model_zeroes: usize = 0;
+    var dial: i32 = 50;
+    var zeroes: usize = 0;
 
     while (it.next()) |line| {
         if (line.len <= 1) break;
 
-        const direction: i32 = switch (line[0]) {
-            'L' => -1,
-            'R' => 1,
-            else => unreachable,
-        };
-
         const amount = try std.fmt.parseInt(i32, line[1..], 10);
 
-        for (0..@intCast(amount)) |_| {
-            if (direction == 1) {
-                if (model_dial == 99) model_dial = 0 else model_dial += 1;
-            } else {
-                if (model_dial == 0) model_dial = 99 else model_dial -= 1;
-            }
-            if (model_dial == 0) {
-                model_zeroes += 1;
-            }
+        const turns = @divFloor(amount, 100);
+        const rotation = @mod(amount, 100);
+
+        zeroes += @intCast(turns);
+        if (line[0] == 'R') {
+            if (dial + rotation >= 100) zeroes += 1;
+            dial = @mod(dial + rotation, 100);
+        } else {
+            if (dial > 0 and (dial - rotation) <= 0) zeroes += 1;
+            dial = @mod(dial - rotation, 100);
         }
     }
-    std.debug.print("zeroes = {d}", .{model_zeroes});
+    std.debug.print("zeroes = {d}", .{zeroes});
 }
