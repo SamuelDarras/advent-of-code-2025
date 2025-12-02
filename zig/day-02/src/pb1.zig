@@ -4,8 +4,8 @@ const SRC = @embedFile("./src1.txt");
 // const SRC = "11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124";
 
 pub fn main() !void {
-    var line = std.mem.splitAny(u8, SRC, "\n");
-    var ranges = std.mem.splitAny(u8, line.first(), ",");
+    var lines = std.mem.splitAny(u8, SRC, "\n");
+    var ranges = std.mem.splitAny(u8, lines.first(), ",");
 
     var acc: usize = 0;
 
@@ -25,5 +25,5 @@ pub fn main() !void {
         }
     }
 
-    std.debug.print("{d}", .{acc});
+    std.debug.print("{d}\n", .{acc});
 }
