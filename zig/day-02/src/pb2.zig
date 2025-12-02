@@ -7,6 +7,13 @@ pub fn main() !void {
     const line = std.mem.trim(u8, SRC, "\n");
     var ranges = std.mem.splitAny(u8, line, ",");
 
+    const alloc = std.heap.page_allocator;
+    var pool: std.Thread.Pool = undefined;
+    try pool.init(.{ .allocator = alloc, .n_jobs = try std.Thread.getCpuCount() });
+    defer pool.deinit();
+
+    var wg = std.Thread.WaitGroup{};
+
     var acc: usize = 0;
 
     while (ranges.next()) |range| {
@@ -14,26 +21,34 @@ pub fn main() !void {
         const lo = try std.fmt.parseInt(usize, range[0..split_index], 10);
         const hi = try std.fmt.parseInt(usize, range[split_index + 1 ..], 10);
 
-        var buf: [1024]u8 = undefined;
-        for (lo..hi + 1) |n| {
-            const s = try std.fmt.bufPrint(&buf, "{d}", .{n});
-
-            // Iterating from longer to smaller pattern length means less iterations
-            var len = (s.len / 2) + 1;
-            while (len > 1) : (len -= 1) {
-                if (check_repeat_len(s, len)) {
-                    acc += n;
-                    break;
-                }
-            }
-        }
+        pool.spawnWg(&wg, check_one_range, .{ lo, hi, &acc });
     }
+    wg.wait();
 
     std.debug.print("{d}\n", .{acc});
 }
 
+fn check_one_range(lo: usize, hi: usize, acc: *usize) void {
+    var buf: [256]u8 = undefined;
+
+    for (lo..hi + 1) |n| {
+        const s = std.fmt.bufPrint(&buf, "{d}", .{n}) catch return;
+
+        // Iterating from longer to smaller pattern length means less iterations
+        // for longer numbers, wich are less likely to repeat a lot.
+        var len = (s.len / 2) + 1;
+        while (len > 1) : (len -= 1) {
+            if (check_repeat_len(s, len)) {
+                // Perform atomic Read Modify Write: acc += n
+                _ = @atomicRmw(usize, acc, .Add, n, .seq_cst);
+                break;
+            }
+        }
+    }
+}
+
 fn check_repeat_len(slice: []const u8, len: usize) bool {
-    // If the number cannot be split exacly in n parts, return false
+    // If the number cannot be split exacly in n parts, return false.
     if (slice.len % len != 0) return false;
 
     const left = slice[0..len];
