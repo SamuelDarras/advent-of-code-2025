@@ -30,7 +30,6 @@ pub fn main() !void {
                 max2 = line[i];
             }
         }
-        std.debug.print("{d}{d}\n", .{ max1 - '0', max2 - '0' });
 
         const joltage = (max1 - '0') * 10 + (max2 - '0');
         sum += joltage;
