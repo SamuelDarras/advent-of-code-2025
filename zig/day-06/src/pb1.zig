@@ -2,8 +2,8 @@ const std = @import("std");
 
 const SRC = @embedFile("./src1.txt");
 // const SRC =
-//     \\123 328  51 64 
-//     \\ 45 64  387 23 
+//     \\123 328  51 64
+//     \\ 45 64  387 23
 //     \\  6 98  215 314
 //     \\*   +   *   +
 // ;
@@ -29,17 +29,13 @@ pub fn main() !void {
             Other,
         };
 
-        std.debug.print("`{s}`\n", .{line});
-
         sw: switch (State.Digit) {
             .Digit => {
                 if (line[0] == '*' or line[0] == '+') {
                     operations = line;
                     break :parse_numbers;
                 }
-                if (line_index < line.len) {
-                    std.debug.print(".Digit `{c}`\n", .{line[line_index]});
-                }
+                if (line_index < line.len) {}
 
                 defer line_index += 1;
 
@@ -49,7 +45,6 @@ pub fn main() !void {
                     continue :sw .Digit;
                 } else {
                     const s = current_number_buffer[0..current_number_buffer_len];
-                    std.debug.print("\tappend `{s}`\n", .{s});
                     const v = try std.fmt.parseInt(usize, s, 10);
                     if (column_idx < columns.items.len) {
                         columns.items[column_idx].@"0" += v;
@@ -62,7 +57,6 @@ pub fn main() !void {
             },
             .Other => {
                 if (line_index >= line.len) break :sw;
-                std.debug.print(".Other `{c}`\n", .{line[line_index]});
 
                 defer line_index += 1;
 
@@ -76,10 +70,6 @@ pub fn main() !void {
                 }
             },
         }
-    }
-
-    for (columns.items) |col| {
-        std.debug.print("{d}, {d}\n", .{ col.@"0", col.@"1" });
     }
 
     var sum: usize = 0;
