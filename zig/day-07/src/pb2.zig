@@ -32,7 +32,6 @@ pub fn main() !void {
     var next_set = std.AutoHashMap(Key, usize).init(alloc);
     defer next_set.deinit();
 
-
     var lines_it = std.mem.splitAny(u8, SRC, "\n");
     const first_line = lines_it.next().?;
 
@@ -53,27 +52,26 @@ pub fn main() !void {
             skip = true;
         }
 
-        // std.debug.print("{s}\n", .{line});
-
         var it = set.iterator();
         while (it.next()) |e| {
-            const c = line[e.key_ptr.*];
-            const parent_value = e.key_ptr.*;
+            const idx = e.key_ptr.*;
+            const c = line[idx];
+            const parent_value = e.value_ptr.*;
             if (c == '^') {
-                const left = try next_set.getOrPut(e.key_ptr.* - 1);
+                const left = try next_set.getOrPut(idx - 1);
                 if (left.found_existing) {
                     left.value_ptr.* += parent_value;
                 } else {
                     left.value_ptr.* = parent_value;
                 }
-                const right = try next_set.getOrPut(e.key_ptr.* + 1);
+                const right = try next_set.getOrPut(idx + 1);
                 if (right.found_existing) {
                     right.value_ptr.* += parent_value;
                 } else {
                     right.value_ptr.* = parent_value;
                 }
             } else {
-                const pos = try next_set.getOrPut(e.key_ptr.*);
+                const pos = try next_set.getOrPut(idx);
                 if (pos.found_existing) {
                     pos.value_ptr.* += parent_value;
                 } else {
@@ -83,15 +81,6 @@ pub fn main() !void {
         }
         set = try next_set.clone();
         next_set.clearRetainingCapacity();
-
-        // for (0..line.len) |i| {
-        //     if (set.get(i)) |v| {
-        //         std.debug.print("{x}", .{v});
-        //     } else {
-        //         std.debug.print(".", .{});
-        //     }
-        // }
-        // std.debug.print("\n", .{});
     }
 
     var it = set.iterator();
