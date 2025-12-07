@@ -55,8 +55,9 @@ pub fn main() !void {
         var it = set.iterator();
         while (it.next()) |e| {
             const idx = e.key_ptr.*;
-            const c = line[idx];
             const parent_value = e.value_ptr.*;
+
+            const c = line[idx];
             if (c == '^') {
                 const left = try next_set.getOrPut(idx - 1);
                 if (left.found_existing) {
@@ -79,7 +80,7 @@ pub fn main() !void {
                 }
             }
         }
-        set = try next_set.clone();
+        std.mem.swap(std.AutoHashMap(Key, usize), &set, &next_set);
         next_set.clearRetainingCapacity();
     }
 
